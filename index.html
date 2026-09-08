@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leave a Birthday Wish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FAF3EA;
+    --cream-deep:#F1E4D4;
+    --paper:#FFFCF8;
+    --blush:#F0C7BE;
+    --blush-soft:#F7DFD8;
+    --rose:#C9756B;
+    --rose-deep:#A8564E;
+    --gold:#C9A15E;
+    --gold-soft:#E7CE99;
+    --plum:#33202D;
+    --plum-soft:#4A2E40;
+    --ink:#3A2B2D;
+    --ink-soft:#7A6660;
+    --line: rgba(58,43,45,0.13);
+    --shadow-sm: 0 8px 24px -12px rgba(58,43,45,0.20);
+    --shadow-lg: 0 30px 60px -25px rgba(58,43,45,0.30);
+    --r-lg: 30px;
+    --r-md: 22px;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Manrope', -apple-system, sans-serif;
+    --hand: 'Caveat', cursive;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:var(--sans); background:var(--cream); color:var(--ink);
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:60px 20px; overflow-x:hidden; position:relative;
+  }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+  #confetti-canvas{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.55; pointer-events:none; z-index:0; }
+
+  .wrap{ max-width:520px; width:100%; position:relative; z-index:1; text-align:center; }
+  .tag{ font-family:var(--hand); font-size:26px; color:var(--rose-deep); display:block; margin-bottom:10px; }
+  h1{ font-family:var(--serif); font-weight:600; font-size:clamp(28px,5vw,38px); line-height:1.15; }
+  p.sub{ margin-top:16px; color:var(--ink-soft); font-size:15.5px; max-width:420px; margin-left:auto; margin-right:auto; line-height:1.65; }
+
+  .card{
+    margin-top:38px; background:var(--paper); border:1px solid var(--line);
+    border-radius:var(--r-lg); padding:36px 30px; box-shadow:var(--shadow-lg);
+    text-align:left;
+  }
+  label{ display:block; font-size:13px; font-weight:700; color:var(--ink-soft); margin-bottom:8px; }
+  input, textarea{
+    width:100%; font-family:var(--sans); font-size:15px; color:var(--ink);
+    background:var(--cream); border:1.5px solid var(--line); border-radius:14px;
+    padding:14px 16px; transition:border-color .25s ease;
+  }
+  input:focus, textarea:focus{ outline:none; border-color:var(--rose-deep); }
+  textarea{ resize:vertical; min-height:120px; line-height:1.6; }
+  .field{ margin-bottom:20px; }
+  .field:last-of-type{ margin-bottom:0; }
+
+  .submit-btn{
+    width:100%; margin-top:26px; font-family:inherit; font-size:15.5px; font-weight:700;
+    padding:16px 28px; border-radius:999px; border:none; cursor:pointer;
+    background:linear-gradient(135deg, var(--rose), var(--rose-deep)); color:var(--paper);
+    box-shadow:0 14px 30px -12px rgba(168,86,78,0.55);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .submit-btn:hover{ transform:translateY(-3px); box-shadow:0 20px 36px -12px rgba(168,86,78,0.65); }
+  .submit-btn:disabled{ opacity:0.55; cursor:not-allowed; transform:none; }
+
+  .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:14px; text-align:center; }
+
+  /* result state */
+  #formState{ transition:opacity .3s ease; }
+  #resultState{ display:none; }
+  #resultState.show{ display:block; }
+
+  .wish-card{
+    background:linear-gradient(155deg, var(--plum), var(--plum-soft));
+    border-radius:var(--r-lg); padding:36px 30px; color:var(--cream);
+    box-shadow:var(--shadow-lg); text-align:left; position:relative; overflow:hidden;
+  }
+  .wish-card::before{
+    content:''; position:absolute; inset:0; opacity:0.5;
+    background:radial-gradient(circle at 15% 10%, rgba(201,161,94,0.25), transparent 45%);
+  }
+  .wish-card-inner{ position:relative; z-index:1; }
+  .wish-eyebrow{ font-family:var(--hand); font-size:22px; color:var(--gold-soft); }
+  .wish-msg{ font-family:var(--serif); font-size:19px; line-height:1.6; margin-top:14px; }
+  .wish-from{ margin-top:20px; font-size:13.5px; color:rgba(250,243,234,0.75); font-weight:600; }
+
+  .result-actions{ display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; }
+  .action-btn{
+    flex:1; min-width:150px; font-family:inherit; font-size:14px; font-weight:700;
+    padding:13px 20px; border-radius:999px; cursor:pointer; transition:all .25s ease;
+  }
+  .copy-btn{ background:var(--gold); color:var(--plum); border:none; }
+  .copy-btn:hover{ transform:translateY(-2px); }
+  .reset-btn{ background:var(--paper); color:var(--ink); border:1.5px solid var(--line); }
+  .reset-btn:hover{ border-color:var(--rose-deep); color:var(--rose-deep); }
+
+  .result-hint{
+    margin-top:20px; font-size:13.5px; color:var(--ink-soft); text-align:center; line-height:1.6;
+  }
+  .result-hint strong{ color:var(--rose-deep); }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="blob" style="width:320px;height:320px; background:var(--blush); top:-100px; left:-100px;"></div>
+<div class="blob" style="width:280px;height:280px; background:var(--gold-soft); bottom:-100px; right:-100px;"></div>
+
+<div class="wrap">
+  <span class="tag">a little something for her</span>
+  <h1>Leave a Birthday Wish</h1>
+  <p class="sub">Write a short message for Ching Thing's birthday. Just hit submit — it'll be added straight to her surprise. ♡</p>
+
+  <div id="formState">
+    <div class="card">
+      <div class="field">
+        <label for="wishName">Your name</label>
+        <input type="text" id="wishName" placeholder="e.g. Wei Lin" maxlength="40">
+      </div>
+      <div class="field">
+        <label for="wishMsg">Your message</label>
+        <textarea id="wishMsg" placeholder="Write your birthday wish here..." maxlength="400"></textarea>
+      </div>
+      <button class="submit-btn" id="submitBtn">Add My Wish 🎉</button>
+      <p class="hint">Takes less than a minute — from the heart is best.</p>
+    </div>
+  </div>
+
+  <div id="resultState">
+    <div class="wish-card">
+      <div class="wish-card-inner">
+        <span class="wish-eyebrow">your wish</span>
+        <p class="wish-msg" id="outMsg"></p>
+        <p class="wish-from" id="outFrom"></p>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="action-btn copy-btn" id="copyBtn">Copy Message</button>
+      <button class="action-btn reset-btn" id="resetBtn">Write Another</button>
+    </div>
+    <p class="result-hint">Your wish has been added <strong>♡</strong> — feel free to copy or screenshot it too if you'd like to share it yourself.</p>
+  </div>
+</div>
+
+<script type="module">
+  // ============================================================
+  // 🔧 FIREBASE SETUP — paste your project's config below.
+  // Get this from: Firebase Console → Project Settings → Your apps → Web app
+  // It is safe for this object to be visible in the page source —
+  // Firebase access is controlled by Firestore Security Rules, not by
+  // hiding this config. See the setup checklist for the rules to use.
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAao9SrN0fhjMsy84ZYCN0jfvqn-BZQNG0",
+    authDomain: "ct0923.firebaseapp.com",
+    projectId: "ct0923",
+    storageBucket: "ct0923.firebasestorage.app",
+    messagingSenderId: "637374504974",
+    appId: "1:637374504974:web:5d9493080461458790dc5f"
+  };
+
+  let db = null;
+  let firestoreReady = false;
+  try{
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js");
+    const { getFirestore, collection, addDoc, serverTimestamp } =
+      await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+    if(firebaseConfig.apiKey !== "YOUR_API_KEY_PLACEHOLDER_NEVER_MATCHES"){
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      window.__saveWish = (name, message) =>
+        addDoc(collection(db, "wishes"), { name: name || "Someone who cares", message, createdAt: serverTimestamp() });
+      firestoreReady = true;
+    } else {
+      console.warn("Firebase config not set yet — wishes will only show locally, not save. See the setup checklist.");
+    }
+  } catch(err){
+    console.error("Firebase failed to load:", err);
+  }
+
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const palette = ['#C9756B', '#C9A15E', '#F0C7BE', '#E7CE99', '#A8564E'];
+  function launchConfetti(durationMs){
+    const count = 130;
+    const particles = [];
+    for(let i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*canvas.width, y: -20 - Math.random()*canvas.height*0.3,
+        r: 4 + Math.random()*5, c: palette[Math.floor(Math.random()*palette.length)],
+        vy: 2 + Math.random()*3, vx: -1.5 + Math.random()*3,
+        rot: Math.random()*360, vr: -6 + Math.random()*12,
+        shape: Math.random() > 0.5 ? 'rect' : 'circle'
+      });
+    }
+    const start = performance.now();
+    function frame(t){
+      const elapsed = t - start;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p=>{
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI/180); ctx.fillStyle = p.c;
+        if(p.shape === 'rect'){ ctx.fillRect(-p.r, -p.r*0.6, p.r*2, p.r*1.2); }
+        else{ ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.fill(); }
+        ctx.restore();
+      });
+      if(elapsed < durationMs){ requestAnimationFrame(frame); }
+      else{ ctx.clearRect(0,0,canvas.width,canvas.height); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  const formState = document.getElementById('formState');
+  const resultState = document.getElementById('resultState');
+  const submitBtn = document.getElementById('submitBtn');
+  const nameInput = document.getElementById('wishName');
+  const msgInput = document.getElementById('wishMsg');
+  const outMsg = document.getElementById('outMsg');
+  const outFrom = document.getElementById('outFrom');
+  const copyBtn = document.getElementById('copyBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  submitBtn.addEventListener('click', async ()=>{
+    const name = nameInput.value.trim();
+    const msg = msgInput.value.trim();
+    if(!msg){ msgInput.focus(); msgInput.style.borderColor = 'var(--rose-deep)'; return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    if(firestoreReady){
+      try{
+        await window.__saveWish(name, msg);
+      } catch(err){
+        console.error('Could not save wish:', err);
+      }
+    }
+
+    outMsg.textContent = '"' + msg + '"';
+    outFrom.textContent = '— ' + (name || 'Someone who cares');
+    formState.style.display = 'none';
+    resultState.classList.add('show');
+    launchConfetti(2800);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Add My Wish 🎉';
+  });
+
+  copyBtn.addEventListener('click', ()=>{
+    const text = outMsg.textContent + '\\n' + outFrom.textContent;
+    navigator.clipboard.writeText(text).then(()=>{
+      copyBtn.textContent = 'Copied ✓';
+      setTimeout(()=>{ copyBtn.textContent = 'Copy Message'; }, 2000);
+    }).catch(()=>{
+      copyBtn.textContent = 'Select the text above';
+      setTimeout(()=>{ copyBtn.textContent = 'Copy Message'; }, 2000);
+    });
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    nameInput.value = ''; msgInput.value = ''; msgInput.style.borderColor = '';
+    resultState.classList.remove('show');
+    formState.style.display = 'block';
+  });
+
+  msgInput.addEventListener('input', ()=>{ msgInput.style.borderColor = ''; });
+</script>
+
+</body>
+</html>
